@@ -27,20 +27,19 @@ namespace GestionBBDD
 
             // Crea un PictureBox para mostrar la foto
             PictureBox fotoPictureBox = new PictureBox();
-            Image image = Image.FromFile("ptrjuanlu.jpg");
-            fotoPictureBox.Image = image;
+            fotoPictureBox.Image = Properties.Resources.ptrjuanlu; // Asume que ptrjuanlu es el nombre de tu imagen
             fotoPictureBox.SizeMode = PictureBoxSizeMode.Zoom; // Ajusta la imagen al tamaño del PictureBox
-            fotoPictureBox.Size = new Size(200, 200); // Establece un tamaño fijo para el PictureBox
+            fotoPictureBox.Size = new Size(150, 150); // Establece un tamaño fijo para el PictureBox
             fotoPictureBox.Dock = DockStyle.Top;
             Controls.Add(fotoPictureBox);
 
             // Crea un PictureBox para mostrar el logo de CEPSA
             PictureBox logoPictureBox = new PictureBox();
-            Image logoImage = Image.FromFile("OIP.jpg");
-            logoPictureBox.Image = logoImage;
+            logoPictureBox.Image = Properties.Resources.OIP; // Asume que OIP es el nombre de tu imagen
             logoPictureBox.SizeMode = PictureBoxSizeMode.Zoom; // Ajusta la imagen al tamaño del PictureBox
             logoPictureBox.Dock = DockStyle.Fill; // Llena el espacio restante del formulario
             Controls.Add(logoPictureBox);
+
 
             // Ajusta el tamaño del formulario a un tamaño fijo
             ClientSize = new Size(600, 675); // Reemplaza 500 y 600 con el ancho y la altura que desees
