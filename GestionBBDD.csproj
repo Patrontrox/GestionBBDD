@@ -67,6 +67,18 @@
     <Compile Include="BufferedDataGridView.Designer.cs">
       <DependentUpon>BufferedDataGridView.cs</DependentUpon>
     </Compile>
+    <Compile Include="CreateRelationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CreateRelationForm.Designer.cs">
+      <DependentUpon>CreateRelationForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CreateTableForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CreateTableForm.Designer.cs">
+      <DependentUpon>CreateTableForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="CreditosForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -78,6 +90,12 @@
     </Compile>
     <Compile Include="DataForm.Designer.cs">
       <DependentUpon>DataForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditRelationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditRelationForm.Designer.cs">
+      <DependentUpon>EditRelationForm.cs</DependentUpon>
     </Compile>
     <Compile Include="PantallaPrincipal.cs">
       <SubType>Form</SubType>

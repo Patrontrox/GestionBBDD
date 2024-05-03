@@ -42,7 +42,7 @@ namespace GestionBBDD
                         $@"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={dbPath};");
 
                     conn.Open();
-                    return conn;
+                    return conn;   
                 }
                 else
                 {
@@ -77,18 +77,21 @@ namespace GestionBBDD
             insertButton.Text = "Insertar datos";
             insertButton.Dock = DockStyle.Top;
             insertButton.Click += insertButton_Click; // Asigna el manejador de eventos
+            insertButton.AutoSize = true;
             Controls.Add(insertButton);
 
             editButton = new Button();
             editButton.Text = "Editar datos";
             editButton.Dock = DockStyle.Top;
             editButton.Click += editButton_Click; // Asigna el manejador de eventos
+            editButton.AutoSize = true;
             Controls.Add(editButton);
 
             deleteButton = new Button();
             deleteButton.Text = "Eliminar datos";
             deleteButton.Dock = DockStyle.Top;
             deleteButton.Click += deleteButton_Click; // Asigna el manejador de eventos
+            deleteButton.AutoSize = true;
             Controls.Add(deleteButton);
 
             // Crea el botón de créditos
@@ -96,6 +99,7 @@ namespace GestionBBDD
             creditosButton.Text = "Créditos";
             creditosButton.Dock = DockStyle.Top;
             creditosButton.Click += creditosButton_Click; // Asigna el manejador de eventos
+            creditosButton.AutoSize = true;
             Controls.Add(creditosButton);
 
             // Configura los colores y estilos del botón de créditos
@@ -105,8 +109,54 @@ namespace GestionBBDD
             creditosButton.FlatAppearance.BorderSize = 1;
             creditosButton.Font = new Font("Arial", 10, FontStyle.Bold);
 
+            // Crea el botón para crear tablas
+            Button createTableButton = new Button();
+            createTableButton.Text = "Crear tabla";
+            createTableButton.Dock = DockStyle.Top;
+            createTableButton.Click += createTableButton_Click; // Asigna el manejador de eventos
+            createTableButton.AutoSize = true;
+            Controls.Add(createTableButton);
+
+            // Configura los colores y estilos del botón para crear tablas
+            createTableButton.BackColor = Color.LightBlue;
+            createTableButton.FlatStyle = FlatStyle.Flat;
+            createTableButton.FlatAppearance.BorderColor = Color.LightBlue;
+            createTableButton.FlatAppearance.BorderSize = 1;
+            createTableButton.Font = new Font("Arial", 10, FontStyle.Bold);
+
+            // Crea el botón para crear relaciones
+            Button createRelationButton = new Button();
+            createRelationButton.Text = "Crear relación";
+            createRelationButton.Dock = DockStyle.Top;
+            createRelationButton.Click += createRelationButton_Click; // Asigna el manejador de eventos
+            createRelationButton.AutoSize = true;
+            Controls.Add(createRelationButton);
+
+            // Configura los colores y estilos del botón para crear relaciones
+            createRelationButton.BackColor = Color.LightCoral;
+            createRelationButton.FlatStyle = FlatStyle.Flat;
+            createRelationButton.FlatAppearance.BorderColor = Color.LightCoral;
+            createRelationButton.FlatAppearance.BorderSize = 1;
+            createRelationButton.Font = new Font("Arial", 10, FontStyle.Bold);
+
+            // Crea el botón de refresco
+            Button refreshButton = new Button();
+            refreshButton.Text = "Refrescar tablas";
+            refreshButton.Dock = DockStyle.Top;
+            refreshButton.Click += refreshButton_Click; // Asigna el manejador de eventos
+            refreshButton.AutoSize = true;
+            Controls.Add(refreshButton);
+
+            // Configura los colores y estilos del botón de refresco
+            refreshButton.BackColor = Color.LightGreen;
+            refreshButton.FlatStyle = FlatStyle.Flat;
+            refreshButton.FlatAppearance.BorderColor = Color.LightGreen;
+            refreshButton.FlatAppearance.BorderSize = 1;
+            refreshButton.Font = new Font("Arial", 10, FontStyle.Bold);
+
             dataGridView = new BufferedDataGridView(); // Utiliza un DataGridView personalizado para mejorar el rendimiento
             dataGridView.Dock = DockStyle.Fill;
+            dataGridView.ReadOnly = true; // Hace que todas las celdas sean de solo lectura
             Controls.Add(dataGridView);
             FormBorderStyle = FormBorderStyle.Sizable;
             dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
@@ -117,7 +167,10 @@ namespace GestionBBDD
             Controls.SetChildIndex(editButton, 2);
             Controls.SetChildIndex(insertButton, 3);
             Controls.SetChildIndex(creditosButton, 4);
-            Controls.SetChildIndex(tableNameComboBox, 5);
+            Controls.SetChildIndex(createTableButton, 5);
+            Controls.SetChildIndex(createRelationButton, 6);
+            Controls.SetChildIndex(refreshButton, 7);
+            Controls.SetChildIndex(tableNameComboBox, 8);
 
             // Configura los colores y estilos de los botones
             insertButton.BackColor = Color.MediumSeaGreen;
@@ -151,6 +204,65 @@ namespace GestionBBDD
 
         }
 
+        private void refreshButton_Click(object sender, EventArgs e)
+        {
+            LoadTableNames();
+        }
+
+        // Manejador de eventos para el botón de creación de relaciones
+        private void createRelationButton_Click(object sender, EventArgs e)
+        {
+            // Crea una nueva instancia del formulario de creación de relaciones y lo muestra como un diálogo modal
+            CreateRelationForm form = new CreateRelationForm(conn);
+            form.StartPosition = FormStartPosition.CenterParent; // Asegura que la ventana se abre en el centro de la ventana principal        
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                // Recoge la información del formulario
+                string table1 = form.Table1;
+                string column1 = form.Column1;
+                string table2 = form.Table2;
+                string column2 = form.Column2;
+
+                // Crea la relación en la base de datos
+                string sql = $"ALTER TABLE [{table1}] ADD CONSTRAINT FK_{table1}_{table2} FOREIGN KEY ([{column1}]) REFERENCES [{table2}] ([{column2}])";
+                using (OdbcCommand cmd = new OdbcCommand(sql, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        //Manejador de eventos para el botón de creación de tablas
+        private void createTableButton_Click(object sender, EventArgs e)
+        {
+            // Crea una nueva instancia del formulario de creación de tablas y lo muestra como un diálogo modal
+            CreateTableForm form = new CreateTableForm();
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                // Recoge la información del formulario
+                string tableName = form.TableName;
+                List<(string ColumnName, string ColumnType, bool PrimaryKey, bool Unique, bool NotNull, bool Check)> columns = form.Columns;
+
+                // Check if tableName and columns are not empty
+                if (string.IsNullOrWhiteSpace(tableName) || columns.Count == 0)
+                {
+                    MessageBox.Show("El nombre de la tabla y las columnas no pueden estar vacíos.");
+                    return;
+                }
+
+                // Crea la tabla en la base de datos
+                string sql = $"CREATE TABLE [{tableName}] ({string.Join(", ", columns.Select(column => $"[{column.ColumnName}] {column.ColumnType} " + (column.PrimaryKey ? "PRIMARY KEY, " : "") + (column.Unique ? "UNIQUE, " : "") + (column.NotNull ? "NOT NULL, " : "") + (column.Check ? "CHECK" : "")))})";
+                using (OdbcCommand cmd = new OdbcCommand(sql, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Recarga los nombres de las tablas
+                LoadTableNames();
+            }
+        }
+
+
         // Manejador de eventos para el botón de créditos
         private void creditosButton_Click(object sender, EventArgs e)
         {
@@ -172,6 +284,9 @@ namespace GestionBBDD
         {
             try
             {
+                // Limpia los elementos existentes
+                tableNameComboBox.Items.Clear();
+
                 DataTable schema = conn.GetSchema("Tables");
                 foreach (DataRow row in schema.Rows)
                 {
@@ -184,6 +299,7 @@ namespace GestionBBDD
                 MessageBox.Show("Error al obtener los nombres de las tablas: " + ex.Message);
             }
         }
+
 
         //Método para obtener y mostrar los datos de la tabla seleccionada
         private async Task FetchAndDisplayDataAsync()
@@ -220,7 +336,16 @@ namespace GestionBBDD
                 columnNames.Add(columnName);
             }
 
-            DataForm form = new DataForm(columnNames.ToArray(), false);
+            string connectionString = conn.ConnectionString;
+            string tableName = tableNameComboBox.SelectedItem?.ToString();
+            if (tableName == null)
+            {
+                // Handle the case where no item is selected, perhaps by displaying an error message to the user
+                MessageBox.Show("Por favor, selecciona una tabla.");
+                return;
+            }
+
+            DataForm form = new DataForm(connectionString, tableName, false);
             if (form.ShowDialog() == DialogResult.OK)
             {
                 string sql = $"INSERT INTO [{tableNameComboBox.SelectedItem}] ({string.Join(", ", columnNames)}) VALUES ({string.Join(", ", columnNames.Select(name => "?"))})";
@@ -264,7 +389,10 @@ namespace GestionBBDD
             // Exclude 'Id' from the columnNames list
             columnNames.Remove("Id");
 
-            DataForm form = new DataForm(columnNames.ToArray(), false);
+            string connectionString = conn.ConnectionString;
+            string tableName = tableNameComboBox.SelectedItem.ToString();
+
+            DataForm form = new DataForm(connectionString, tableName, false);
             foreach (string name in columnNames)
             {
                 form.SetFieldValue(name, dataGridView.SelectedRows[0].Cells[name].Value);
