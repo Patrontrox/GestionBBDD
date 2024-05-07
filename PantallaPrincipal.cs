@@ -17,6 +17,7 @@ namespace GestionBBDD
         private Button insertButton;
         private Button editButton;
         private Button deleteButton;
+        private bool? deleteConfirmation = null;
 
         public PantallaPrincipal()
         {
@@ -139,21 +140,6 @@ namespace GestionBBDD
             createRelationButton.FlatAppearance.BorderSize = 1;
             createRelationButton.Font = new Font("Arial", 10, FontStyle.Bold);
 
-            // Crea el botón de refresco
-            Button refreshButton = new Button();
-            refreshButton.Text = "Refrescar tablas";
-            refreshButton.Dock = DockStyle.Top;
-            refreshButton.Click += refreshButton_Click; // Asigna el manejador de eventos
-            refreshButton.AutoSize = true;
-            Controls.Add(refreshButton);
-
-            // Configura los colores y estilos del botón de refresco
-            refreshButton.BackColor = Color.LightGreen;
-            refreshButton.FlatStyle = FlatStyle.Flat;
-            refreshButton.FlatAppearance.BorderColor = Color.LightGreen;
-            refreshButton.FlatAppearance.BorderSize = 1;
-            refreshButton.Font = new Font("Arial", 10, FontStyle.Bold);
-
             dataGridView = new BufferedDataGridView(); // Utiliza un DataGridView personalizado para mejorar el rendimiento
             dataGridView.Dock = DockStyle.Fill;
             dataGridView.ReadOnly = true; // Hace que todas las celdas sean de solo lectura
@@ -169,8 +155,7 @@ namespace GestionBBDD
             Controls.SetChildIndex(creditosButton, 4);
             Controls.SetChildIndex(createTableButton, 5);
             Controls.SetChildIndex(createRelationButton, 6);
-            Controls.SetChildIndex(refreshButton, 7);
-            Controls.SetChildIndex(tableNameComboBox, 8);
+            Controls.SetChildIndex(tableNameComboBox, 7);
 
             // Configura los colores y estilos de los botones
             insertButton.BackColor = Color.MediumSeaGreen;
@@ -204,10 +189,12 @@ namespace GestionBBDD
 
         }
 
-        private void refreshButton_Click(object sender, EventArgs e)
+        private async void refreshButton_Click(object sender, EventArgs e)
         {
             LoadTableNames();
+            await FetchAndDisplayDataAsync();
         }
+
 
         // Manejador de eventos para el botón de creación de relaciones
         private void createRelationButton_Click(object sender, EventArgs e)
@@ -429,6 +416,17 @@ namespace GestionBBDD
             {
                 MessageBox.Show("Por favor, selecciona al menos una fila para eliminar.");
                 return;
+            }
+
+            if (deleteConfirmation == null || deleteConfirmation == false)
+            {
+                ConfirmationForm form = new ConfirmationForm();
+                var result = form.ShowDialog();
+                if (result == DialogResult.No || result == DialogResult.Cancel)
+                {
+                    return;
+                }
+                deleteConfirmation = form.DoNotAskAgain;
             }
 
             DataTable schema = conn.GetSchema("Columns", new string[] { null, null, tableNameComboBox.SelectedItem as string });

@@ -1,6 +1,6 @@
 ﻿namespace GestionBBDD
 {
-    partial class CreateTableForm
+    partial class ConfirmationForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,17 +28,17 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CreateTableForm));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConfirmationForm));
             this.SuspendLayout();
             // 
-            // CreateTableForm
+            // ConfirmationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Name = "CreateTableForm";
-            this.Text = "CreateTableForm";
+            this.Name = "ConfirmationForm";
+            this.Text = "ConfirmationForm";
             this.ResumeLayout(false);
 
         }

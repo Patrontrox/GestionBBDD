@@ -77,13 +77,25 @@ namespace GestionBBDD
         {
             try
             {
-                LoadComboBoxItems(table1ComboBox);
-                LoadComboBoxItems(table2ComboBox);
+                LoadTableNames(table1ComboBox);
+                LoadTableNames(table2ComboBox);
             }
             catch (OdbcException ex)
             {
                 MessageBox.Show("Error al obtener los nombres de las tablas y columnas: " + ex.Message);
             }
+        }
+
+        private void LoadTableNames(ComboBox comboBox)
+        {
+            DataTable items = conn.GetSchema("Tables");
+            foreach (DataRow row in items.Rows)
+            {
+                string itemName = row.Field<string>("TABLE_NAME");
+                comboBox.Items.Add(itemName);
+            }
+            if (comboBox.Items.Count > 0)
+                comboBox.SelectedIndex = 0;
         }
 
         private void LoadComboBoxItems(ComboBox comboBox)
@@ -102,18 +114,30 @@ namespace GestionBBDD
         {
             var comboBox = (ComboBox)sender;
             var relatedComboBox = comboBox == table1ComboBox ? column1ComboBox : column2ComboBox;
-            var relatedTableComboBox = comboBox == table1ComboBox ? table1ComboBox : table2ComboBox;
 
             // Limpiar ComboBox de columna relacionada
             relatedComboBox.Items.Clear();
 
-            if (relatedTableComboBox.SelectedItem != null)
+            if (comboBox.SelectedItem != null)
             {
                 // Cargar las columnas relacionadas
-                string tableName = relatedTableComboBox.SelectedItem.ToString();
-                LoadComboBoxItems(relatedComboBox, tableName);
+                string tableName = comboBox.SelectedItem.ToString();
+                LoadColumnNames(relatedComboBox, tableName);
             }
         }
+
+        private void LoadColumnNames(ComboBox comboBox, string tableName)
+        {
+            DataTable items = conn.GetSchema("Columns", new string[] { null, null, tableName });
+            foreach (DataRow row in items.Rows)
+            {
+                string itemName = row.Field<string>("COLUMN_NAME");
+                comboBox.Items.Add(itemName);
+            }
+            if (comboBox.Items.Count > 0)
+                comboBox.SelectedIndex = 0;
+        }
+
 
 
         private void OkButton_Click(object sender, EventArgs e)

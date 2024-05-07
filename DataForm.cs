@@ -280,7 +280,9 @@ namespace GestionBBDD
                 }
                 else
                 {
-                    throw new ArgumentException($"The value '{value}' does not exist in the ComboBox '{name}'.");
+                    // Add the value to the ComboBox's items
+                    comboBox.Items.Add(value);
+                    comboBox.SelectedItem = value;
                 }
             }
         }

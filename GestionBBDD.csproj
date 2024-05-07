@@ -67,6 +67,12 @@
     <Compile Include="BufferedDataGridView.Designer.cs">
       <DependentUpon>BufferedDataGridView.cs</DependentUpon>
     </Compile>
+    <Compile Include="ConfirmationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ConfirmationForm.Designer.cs">
+      <DependentUpon>ConfirmationForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="CreateRelationForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -105,6 +111,27 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="BufferedDataGridView.resx">
+      <DependentUpon>BufferedDataGridView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ConfirmationForm.resx">
+      <DependentUpon>ConfirmationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CreateRelationForm.resx">
+      <DependentUpon>CreateRelationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CreateTableForm.resx">
+      <DependentUpon>CreateTableForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CreditosForm.resx">
+      <DependentUpon>CreditosForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataForm.resx">
+      <DependentUpon>DataForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditRelationForm.resx">
+      <DependentUpon>EditRelationForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PantallaPrincipal.resx">
       <DependentUpon>PantallaPrincipal.cs</DependentUpon>
     </EmbeddedResource>
@@ -135,7 +162,6 @@
     <None Include="bin\Debug\OIP.jpg" />
     <None Include="bin\Debug\ptrjuanlu.jpg" />
     <Content Include="OIP.jpg" />
-    <Content Include="ptrjuanlu.jpg" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8.1">
