@@ -22,7 +22,7 @@ namespace GestionBBDD
             // Crea una etiqueta para mostrar el nombre
             Label nombreLabel = new Label
             {
-                Text = "Juan Luis Domínguez López\nBecario para CEPSA en el área de Cyber",
+                Text = "Juan Luis Domínguez López\nBecario para CEPSA en el área de Cyber OT",
                 Dock = DockStyle.Top,
                 AutoSize = true,
                 Font = labelFont,

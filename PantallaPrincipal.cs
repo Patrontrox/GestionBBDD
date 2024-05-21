@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Odbc;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -23,11 +24,21 @@ namespace GestionBBDD
         {
             InitializeComponent();
             conn = ConnectDatabase();
-            CreateControls();
+
+            // Crea un nuevo Panel con AutoScroll habilitado
+            Panel panel = new Panel
+            {
+                AutoScroll = true,
+                Dock = DockStyle.Fill
+            };
+            Controls.Add(panel);
+            HScroll = true;
+            // Llama a CreateControls pasando el panel como argumento
+            CreateControls(panel);
+
             LoadTableNames();
         }
 
-        //Método para conectar con la base de datos
         private OdbcConnection ConnectDatabase()
         {
             try
@@ -39,11 +50,31 @@ namespace GestionBBDD
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     string dbPath = openFileDialog.FileName;
+
+                    // Crear una copia de seguridad de la base de datos
+                    string backupPath = Path.Combine(Path.GetDirectoryName(dbPath), Path.GetFileNameWithoutExtension(dbPath) + "_backup.accdb");
+                    File.Copy(dbPath, backupPath, true);
+
                     OdbcConnection conn = new OdbcConnection(
                         $@"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={dbPath};");
 
                     conn.Open();
-                    return conn;   
+
+                    // Mostrar el formulario para recoger el nombre y el motivo de la ejecución
+                    ExecutionReasonForm form = new ExecutionReasonForm();
+                    if (form.ShowDialog() == DialogResult.OK)
+                    {
+                        // Insertar los datos en la base de datos
+                        string sql = "INSERT INTO Registros_Acceso (Nombre, Motivo, FechaHora) VALUES (?, ?, ?)";
+                        using (OdbcCommand cmd = new OdbcCommand(sql, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@Nombre", form.UserName);
+                            cmd.Parameters.AddWithValue("@Motivo", form.ExecutionReason);
+                            cmd.Parameters.AddWithValue("@FechaHora", DateTime.Now);
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    return conn;
                 }
                 else
                 {
@@ -58,12 +89,16 @@ namespace GestionBBDD
                 Application.Exit();
                 return null;
             }
+            catch (IOException ex)
+            {
+                MessageBox.Show("No se pudo crear una copia de seguridad de la base de datos: " + ex.Message);
+                Application.Exit();
+                return null;
+            }
         }
 
-
-
         //Método para crear los controles de la interfaz
-        private void CreateControls()
+        private void CreateControls(Panel panel)
         {
             tableNameComboBox = new ComboBox();
             tableNameComboBox.Dock = DockStyle.Top;
@@ -71,7 +106,7 @@ namespace GestionBBDD
             tableNameComboBox.DropDownStyle = ComboBoxStyle.DropDownList; // Cambia el estilo de la caja de combinación
             tableNameComboBox.Font = new Font("Arial", 10, FontStyle.Bold); // Cambia la fuente
             tableNameComboBox.BackColor = Color.LightGray; // Cambia el color de fondo
-            Controls.Add(tableNameComboBox);
+            panel.Controls.Add(tableNameComboBox);
 
             // Crea los botones para insertar, editar y eliminar datos
             insertButton = new Button();
@@ -79,21 +114,21 @@ namespace GestionBBDD
             insertButton.Dock = DockStyle.Top;
             insertButton.Click += insertButton_Click; // Asigna el manejador de eventos
             insertButton.AutoSize = true;
-            Controls.Add(insertButton);
+            panel.Controls.Add(insertButton);
 
             editButton = new Button();
             editButton.Text = "Editar datos";
             editButton.Dock = DockStyle.Top;
             editButton.Click += editButton_Click; // Asigna el manejador de eventos
             editButton.AutoSize = true;
-            Controls.Add(editButton);
+            panel.Controls.Add(editButton);
 
             deleteButton = new Button();
             deleteButton.Text = "Eliminar datos";
             deleteButton.Dock = DockStyle.Top;
             deleteButton.Click += deleteButton_Click; // Asigna el manejador de eventos
             deleteButton.AutoSize = true;
-            Controls.Add(deleteButton);
+            panel.Controls.Add(deleteButton);
 
             // Crea el botón de créditos
             Button creditosButton = new Button();
@@ -101,7 +136,7 @@ namespace GestionBBDD
             creditosButton.Dock = DockStyle.Top;
             creditosButton.Click += creditosButton_Click; // Asigna el manejador de eventos
             creditosButton.AutoSize = true;
-            Controls.Add(creditosButton);
+            panel.Controls.Add(creditosButton);
 
             // Configura los colores y estilos del botón de créditos
             creditosButton.BackColor = Color.Khaki;
@@ -116,7 +151,7 @@ namespace GestionBBDD
             createTableButton.Dock = DockStyle.Top;
             createTableButton.Click += createTableButton_Click; // Asigna el manejador de eventos
             createTableButton.AutoSize = true;
-            Controls.Add(createTableButton);
+            panel.Controls.Add(createTableButton);
 
             // Configura los colores y estilos del botón para crear tablas
             createTableButton.BackColor = Color.LightBlue;
@@ -131,7 +166,7 @@ namespace GestionBBDD
             createRelationButton.Dock = DockStyle.Top;
             createRelationButton.Click += createRelationButton_Click; // Asigna el manejador de eventos
             createRelationButton.AutoSize = true;
-            Controls.Add(createRelationButton);
+            panel.Controls.Add(createRelationButton);
 
             // Configura los colores y estilos del botón para crear relaciones
             createRelationButton.BackColor = Color.LightCoral;
@@ -143,19 +178,19 @@ namespace GestionBBDD
             dataGridView = new BufferedDataGridView(); // Utiliza un DataGridView personalizado para mejorar el rendimiento
             dataGridView.Dock = DockStyle.Fill;
             dataGridView.ReadOnly = true; // Hace que todas las celdas sean de solo lectura
-            Controls.Add(dataGridView);
+            panel.Controls.Add(dataGridView);
             FormBorderStyle = FormBorderStyle.Sizable;
             dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridView.MultiSelect = true;
 
-            Controls.SetChildIndex(dataGridView, 0);
-            Controls.SetChildIndex(deleteButton, 1);
-            Controls.SetChildIndex(editButton, 2);
-            Controls.SetChildIndex(insertButton, 3);
-            Controls.SetChildIndex(creditosButton, 4);
-            Controls.SetChildIndex(createTableButton, 5);
-            Controls.SetChildIndex(createRelationButton, 6);
-            Controls.SetChildIndex(tableNameComboBox, 7);
+            panel.Controls.SetChildIndex(dataGridView, 0);
+            panel.Controls.SetChildIndex(deleteButton, 1);
+            panel.Controls.SetChildIndex(editButton, 2);
+            panel.Controls.SetChildIndex(insertButton, 3);
+            panel.Controls.SetChildIndex(creditosButton, 4);
+            panel.Controls.SetChildIndex(createTableButton, 5);
+            panel.Controls.SetChildIndex(createRelationButton, 6);
+            panel.Controls.SetChildIndex(tableNameComboBox, 7);
 
             // Configura los colores y estilos de los botones
             insertButton.BackColor = Color.MediumSeaGreen;
@@ -186,7 +221,6 @@ namespace GestionBBDD
             dataGridView.DefaultCellStyle.BackColor = Color.Beige; // Cambia el color de fondo de las celdas
             dataGridView.DefaultCellStyle.SelectionBackColor = Color.Teal; // Cambia el color de fondo de las celdas seleccionadas
             dataGridView.DefaultCellStyle.SelectionForeColor = Color.White; // Cambia el color de la fuente de las celdas seleccionadas
-
         }
 
         private async void refreshButton_Click(object sender, EventArgs e)
@@ -195,13 +229,12 @@ namespace GestionBBDD
             await FetchAndDisplayDataAsync();
         }
 
-
         // Manejador de eventos para el botón de creación de relaciones
         private void createRelationButton_Click(object sender, EventArgs e)
         {
             // Crea una nueva instancia del formulario de creación de relaciones y lo muestra como un diálogo modal
             CreateRelationForm form = new CreateRelationForm(conn);
-            form.StartPosition = FormStartPosition.CenterParent; // Asegura que la ventana se abre en el centro de la ventana principal        
+            form.StartPosition = FormStartPosition.CenterParent;       
             if (form.ShowDialog() == DialogResult.OK)
             {
                 // Recoge la información del formulario
@@ -249,7 +282,6 @@ namespace GestionBBDD
             }
         }
 
-
         // Manejador de eventos para el botón de créditos
         private void creditosButton_Click(object sender, EventArgs e)
         {
@@ -258,13 +290,11 @@ namespace GestionBBDD
             form.ShowDialog();
         }
 
-
         //Método para cargar los datos de la tabla seleccionada
         private async void tableNameComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             await FetchAndDisplayDataAsync();
         }
-
 
         //Método para cargar los nombres de las tablas
         private void LoadTableNames()
@@ -287,12 +317,10 @@ namespace GestionBBDD
             }
         }
 
-
         //Método para obtener y mostrar los datos de la tabla seleccionada
         private async Task FetchAndDisplayDataAsync()
         {
             string tableName = (string)tableNameComboBox.SelectedItem;
-
             try
             {
                 using (OdbcCommand cmd = new OdbcCommand($"SELECT * FROM [{tableName}]", conn))
@@ -311,7 +339,6 @@ namespace GestionBBDD
             }
         }
 
-
         //Manejador de eventos para el botón de inserción
         private async void insertButton_Click(object sender, EventArgs e)
         {
@@ -327,8 +354,13 @@ namespace GestionBBDD
             string tableName = tableNameComboBox.SelectedItem?.ToString();
             if (tableName == null)
             {
-                // Handle the case where no item is selected, perhaps by displaying an error message to the user
                 MessageBox.Show("Por favor, selecciona una tabla.");
+                return;
+            }
+
+            if (tableName == "Registros_Acceso")
+            {
+                MessageBox.Show("No se pueden añadir datos a la tabla Registros_Acceso.");
                 return;
             }
 
@@ -378,6 +410,11 @@ namespace GestionBBDD
 
             string connectionString = conn.ConnectionString;
             string tableName = tableNameComboBox.SelectedItem.ToString();
+            if (tableName == "Registros_Acceso")
+            {
+                MessageBox.Show("No se pueden editar datos en la tabla Registros_Acceso.");
+                return;
+            }
 
             DataForm form = new DataForm(connectionString, tableName, false);
             foreach (string name in columnNames)
@@ -417,6 +454,13 @@ namespace GestionBBDD
                 MessageBox.Show("Por favor, selecciona al menos una fila para eliminar.");
                 return;
             }
+            string tableName = tableNameComboBox.SelectedItem?.ToString();
+
+            if (tableName == "Registros_Acceso")
+            {
+                MessageBox.Show("No se pueden eliminar datos de la tabla Registros_Acceso.");
+                return;
+            }
 
             if (deleteConfirmation == null || deleteConfirmation == false)
             {
@@ -449,6 +493,5 @@ namespace GestionBBDD
 
             await FetchAndDisplayDataAsync();
         }
-
     }
 }

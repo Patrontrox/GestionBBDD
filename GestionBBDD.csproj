@@ -103,6 +103,12 @@
     <Compile Include="EditRelationForm.Designer.cs">
       <DependentUpon>EditRelationForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="ExecutionReasonForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ExecutionReasonForm.Designer.cs">
+      <DependentUpon>ExecutionReasonForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="PantallaPrincipal.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -131,6 +137,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditRelationForm.resx">
       <DependentUpon>EditRelationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ExecutionReasonForm.resx">
+      <DependentUpon>ExecutionReasonForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PantallaPrincipal.resx">
       <DependentUpon>PantallaPrincipal.cs</DependentUpon>
