@@ -258,7 +258,6 @@ namespace GestionBBDD
         // Método para establecer el valor de un campo
         public void SetFieldValue(string name, object value)
         {
-            // Debug line to print out the keys in the fields dictionary and the name being passed
             System.Diagnostics.Debug.WriteLine("Fields keys: " + String.Join(", ", fields.Keys));
             System.Diagnostics.Debug.WriteLine("Name passed: " + name);
 
@@ -280,7 +279,7 @@ namespace GestionBBDD
                 }
                 else
                 {
-                    // Add the value to the ComboBox's items
+                    // Añade los valores al combobox
                     comboBox.Items.Add(value);
                     comboBox.SelectedItem = value;
                 }

@@ -263,7 +263,7 @@ namespace GestionBBDD
                 string tableName = form.TableName;
                 List<(string ColumnName, string ColumnType, bool PrimaryKey, bool Unique, bool NotNull, bool Check)> columns = form.Columns;
 
-                // Check if tableName and columns are not empty
+                // Comprueba que el nombre de la tabla y las columnas no estén vacíos
                 if (string.IsNullOrWhiteSpace(tableName) || columns.Count == 0)
                 {
                     MessageBox.Show("El nombre de la tabla y las columnas no pueden estar vacíos.");
@@ -405,7 +405,7 @@ namespace GestionBBDD
                 columnNames.Add(row["COLUMN_NAME"] as string);
             }
 
-            // Exclude 'Id' from the columnNames list
+            // Elimina la columna Id de la lista de nombres de columna
             columnNames.Remove("Id");
 
             string connectionString = conn.ConnectionString;
