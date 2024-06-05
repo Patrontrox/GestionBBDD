@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Odbc;
+using System.Data.OleDb;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using CsvHelper;
+using OfficeOpenXml;
 
 namespace GestionBBDD
 {
@@ -108,6 +112,22 @@ namespace GestionBBDD
             tableNameComboBox.BackColor = Color.LightGray; // Cambia el color de fondo
             panel.Controls.Add(tableNameComboBox);
 
+            // Crea el botón para importar datos
+            Button importButton = new Button();
+            importButton.Text = "Importar datos";
+            importButton.Dock = DockStyle.Top;
+            importButton.Click += importButton_Click; // Asigna el manejador de eventos
+            importButton.AutoSize = true;
+            panel.Controls.Add(importButton);
+
+            // Crea el botón para exportar datos
+            Button exportButton = new Button();
+            exportButton.Text = "Exportar datos";
+            exportButton.Dock = DockStyle.Top;
+            exportButton.Click += exportButton_Click; // Asigna el manejador de eventos
+            exportButton.AutoSize = true;
+            panel.Controls.Add(exportButton);
+
             // Crea los botones para insertar, editar y eliminar datos
             insertButton = new Button();
             insertButton.Text = "Insertar datos";
@@ -184,13 +204,15 @@ namespace GestionBBDD
             dataGridView.MultiSelect = true;
 
             panel.Controls.SetChildIndex(dataGridView, 0);
-            panel.Controls.SetChildIndex(deleteButton, 1);
-            panel.Controls.SetChildIndex(editButton, 2);
-            panel.Controls.SetChildIndex(insertButton, 3);
-            panel.Controls.SetChildIndex(creditosButton, 4);
-            panel.Controls.SetChildIndex(createTableButton, 5);
-            panel.Controls.SetChildIndex(createRelationButton, 6);
-            panel.Controls.SetChildIndex(tableNameComboBox, 7);
+            panel.Controls.SetChildIndex(importButton, 1);
+            panel.Controls.SetChildIndex(exportButton, 2);
+            panel.Controls.SetChildIndex(deleteButton, 3);
+            panel.Controls.SetChildIndex(editButton, 4);
+            panel.Controls.SetChildIndex(insertButton, 5);
+            panel.Controls.SetChildIndex(creditosButton, 6);
+            panel.Controls.SetChildIndex(createTableButton, 7);
+            panel.Controls.SetChildIndex(createRelationButton, 8);
+            panel.Controls.SetChildIndex(tableNameComboBox, 9);
 
             // Configura los colores y estilos de los botones
             insertButton.BackColor = Color.MediumSeaGreen;
@@ -211,6 +233,17 @@ namespace GestionBBDD
             deleteButton.FlatAppearance.BorderSize = 1;
             deleteButton.Font = new Font("Arial", 10, FontStyle.Bold);
 
+            importButton.BackColor = Color.LightSkyBlue;
+            importButton.FlatStyle = FlatStyle.Flat;
+            importButton.FlatAppearance.BorderColor = Color.LightSkyBlue;
+            importButton.FlatAppearance.BorderSize = 1;
+            importButton.Font = new Font("Arial", 10, FontStyle.Bold);
+
+            exportButton.BackColor = Color.LightSalmon;
+            exportButton.FlatStyle = FlatStyle.Flat;
+            exportButton.FlatAppearance.BorderColor = Color.LightSalmon;
+            exportButton.FlatAppearance.BorderSize = 1;
+            exportButton.Font = new Font("Arial", 10, FontStyle.Bold);
 
             // Configura los colores y estilos del DataGridView
             dataGridView.EnableHeadersVisualStyles = false; // Permite cambiar el estilo de las cabeceras
@@ -229,12 +262,89 @@ namespace GestionBBDD
             await FetchAndDisplayDataAsync();
         }
 
+        private void importButton_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Excel Files|*.xlsx";
+            openFileDialog.Title = "Selecciona un archivo Excel";
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string excelPath = openFileDialog.FileName;
+
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                using (ExcelPackage pck = new ExcelPackage(new FileInfo(excelPath)))
+                {
+                    ExcelWorksheet ws = pck.Workbook.Worksheets[0];
+                    DataTable dt = new DataTable();
+                    foreach (var firstRowCell in ws.Cells[1, 1, 1, ws.Dimension.End.Column])
+                    {
+                        dt.Columns.Add(firstRowCell.Text);
+                    }
+
+                    for (int rowNum = 2; rowNum <= ws.Dimension.End.Row; rowNum++)
+                    {
+                        var wsRow = ws.Cells[rowNum, 1, rowNum, ws.Dimension.End.Column];
+                        DataRow row = dt.NewRow();
+                        foreach (var cell in wsRow)
+                        {
+                            row[cell.Start.Column - 1] = cell.Text;
+                        }
+                        dt.Rows.Add(row);
+                    }
+
+                    string tableName = (string)tableNameComboBox.SelectedItem;
+                    string query = $"INSERT INTO [{tableName}] VALUES ({string.Join(", ", dt.Columns.Cast<DataColumn>().Select(c => "?"))})";
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        using (OdbcCommand cmd = new OdbcCommand(query, conn))
+                        {
+                            foreach (var item in row.ItemArray)
+                            {
+                                cmd.Parameters.AddWithValue("@value", item);
+                            }
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+            }
+        }
+
+        private void exportButton_Click(object sender, EventArgs e)
+        {
+            string tableName = (string)tableNameComboBox.SelectedItem;
+            string query = $"SELECT * FROM [{tableName}]";
+            OdbcCommand cmd = new OdbcCommand(query, conn);
+
+            OdbcDataAdapter da = new OdbcDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial; 
+            using (ExcelPackage pck = new ExcelPackage())
+            {
+                ExcelWorksheet ws = pck.Workbook.Worksheets.Add(tableName);
+                ws.Cells["A1"].LoadFromDataTable(dt, true);
+                var fileBytes = pck.GetAsByteArray();
+
+                // Guardar el archivo
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
+                saveFileDialog.Filter = "Excel Files|*.xlsx";
+                saveFileDialog.Title = "Guarda los datos como Excel";
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    File.WriteAllBytes(saveFileDialog.FileName, fileBytes);
+                }
+            }
+        }
+
         // Manejador de eventos para el botón de creación de relaciones
         private void createRelationButton_Click(object sender, EventArgs e)
         {
             // Crea una nueva instancia del formulario de creación de relaciones y lo muestra como un diálogo modal
             CreateRelationForm form = new CreateRelationForm(conn);
-            form.StartPosition = FormStartPosition.CenterParent;       
+            form.StartPosition = FormStartPosition.CenterParent;
             if (form.ShowDialog() == DialogResult.OK)
             {
                 // Recoge la información del formulario
