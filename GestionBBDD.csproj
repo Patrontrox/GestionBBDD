@@ -156,12 +156,6 @@
     <Compile Include="ConfirmationForm.Designer.cs">
       <DependentUpon>ConfirmationForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="CreateRelationForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CreateRelationForm.Designer.cs">
-      <DependentUpon>CreateRelationForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="CreateTableForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -205,9 +199,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ConfirmationForm.resx">
       <DependentUpon>ConfirmationForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CreateRelationForm.resx">
-      <DependentUpon>CreateRelationForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CreateTableForm.resx">
       <DependentUpon>CreateTableForm.cs</DependentUpon>

@@ -2,14 +2,11 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Odbc;
-using System.Data.OleDb;
 using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using CsvHelper;
 using OfficeOpenXml;
 
 namespace GestionBBDD
@@ -28,6 +25,9 @@ namespace GestionBBDD
         {
             InitializeComponent();
             conn = ConnectDatabase();
+
+            // Asegura que la tabla "Registros_Acceso" exista
+            EnsureRegistrosAccesoExists();
 
             // Crea un nuevo Panel con AutoScroll habilitado
             Panel panel = new Panel
@@ -180,21 +180,6 @@ namespace GestionBBDD
             createTableButton.FlatAppearance.BorderSize = 1;
             createTableButton.Font = new Font("Arial", 10, FontStyle.Bold);
 
-            // Crea el botón para crear relaciones
-            Button createRelationButton = new Button();
-            createRelationButton.Text = "Crear relación";
-            createRelationButton.Dock = DockStyle.Top;
-            createRelationButton.Click += createRelationButton_Click; // Asigna el manejador de eventos
-            createRelationButton.AutoSize = true;
-            panel.Controls.Add(createRelationButton);
-
-            // Configura los colores y estilos del botón para crear relaciones
-            createRelationButton.BackColor = Color.LightCoral;
-            createRelationButton.FlatStyle = FlatStyle.Flat;
-            createRelationButton.FlatAppearance.BorderColor = Color.LightCoral;
-            createRelationButton.FlatAppearance.BorderSize = 1;
-            createRelationButton.Font = new Font("Arial", 10, FontStyle.Bold);
-
             dataGridView = new BufferedDataGridView(); // Utiliza un DataGridView personalizado para mejorar el rendimiento
             dataGridView.Dock = DockStyle.Fill;
             dataGridView.ReadOnly = true; // Hace que todas las celdas sean de solo lectura
@@ -211,8 +196,7 @@ namespace GestionBBDD
             panel.Controls.SetChildIndex(insertButton, 5);
             panel.Controls.SetChildIndex(creditosButton, 6);
             panel.Controls.SetChildIndex(createTableButton, 7);
-            panel.Controls.SetChildIndex(createRelationButton, 8);
-            panel.Controls.SetChildIndex(tableNameComboBox, 9);
+            panel.Controls.SetChildIndex(tableNameComboBox, 8);
 
             // Configura los colores y estilos de los botones
             insertButton.BackColor = Color.MediumSeaGreen;
@@ -255,6 +239,29 @@ namespace GestionBBDD
             dataGridView.DefaultCellStyle.SelectionBackColor = Color.Teal; // Cambia el color de fondo de las celdas seleccionadas
             dataGridView.DefaultCellStyle.SelectionForeColor = Color.White; // Cambia el color de la fuente de las celdas seleccionadas
         }
+
+        private void EnsureRegistrosAccesoExists()
+        {
+            // Comprueba si la tabla "Registros_Acceso" ya existe
+            DataTable schema = conn.GetSchema("Tables");
+            bool tableExists = schema.AsEnumerable().Any(row => row.Field<string>("TABLE_NAME").Equals("Registros_Acceso", StringComparison.OrdinalIgnoreCase));
+
+            // Si la tabla no existe, la crea
+            if (!tableExists)
+            {
+                string sql = @"CREATE TABLE Registros_Acceso (
+                        Id AUTOINCREMENT PRIMARY KEY,
+                        Nombre VARCHAR(255),
+                        Motivo VARCHAR(255),
+                        FechaHora DATETIME
+                      )";
+                using (OdbcCommand cmd = new OdbcCommand(sql, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
 
         private async void refreshButton_Click(object sender, EventArgs e)
         {
@@ -320,7 +327,7 @@ namespace GestionBBDD
             DataTable dt = new DataTable();
             da.Fill(dt);
 
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial; 
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             using (ExcelPackage pck = new ExcelPackage())
             {
                 ExcelWorksheet ws = pck.Workbook.Worksheets.Add(tableName);
@@ -335,29 +342,6 @@ namespace GestionBBDD
                 if (saveFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     File.WriteAllBytes(saveFileDialog.FileName, fileBytes);
-                }
-            }
-        }
-
-        // Manejador de eventos para el botón de creación de relaciones
-        private void createRelationButton_Click(object sender, EventArgs e)
-        {
-            // Crea una nueva instancia del formulario de creación de relaciones y lo muestra como un diálogo modal
-            CreateRelationForm form = new CreateRelationForm(conn);
-            form.StartPosition = FormStartPosition.CenterParent;
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-                // Recoge la información del formulario
-                string table1 = form.Table1;
-                string column1 = form.Column1;
-                string table2 = form.Table2;
-                string column2 = form.Column2;
-
-                // Crea la relación en la base de datos
-                string sql = $"ALTER TABLE [{table1}] ADD CONSTRAINT FK_{table1}_{table2} FOREIGN KEY ([{column1}]) REFERENCES [{table2}] ([{column2}])";
-                using (OdbcCommand cmd = new OdbcCommand(sql, conn))
-                {
-                    cmd.ExecuteNonQuery();
                 }
             }
         }
@@ -520,7 +504,7 @@ namespace GestionBBDD
 
             string connectionString = conn.ConnectionString;
             string tableName = tableNameComboBox.SelectedItem.ToString();
-            if (tableName == "Registros_Acceso")
+            if (tableName == "Registro_Acceso")
             {
                 MessageBox.Show("No se pueden editar datos en la tabla Registros_Acceso.");
                 return;
