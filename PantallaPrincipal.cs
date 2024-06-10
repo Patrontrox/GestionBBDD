@@ -504,7 +504,7 @@ namespace GestionBBDD
 
             string connectionString = conn.ConnectionString;
             string tableName = tableNameComboBox.SelectedItem.ToString();
-            if (tableName == "Registro_Acceso")
+            if (tableName == "Registros_Acceso")
             {
                 MessageBox.Show("No se pueden editar datos en la tabla Registros_Acceso.");
                 return;
