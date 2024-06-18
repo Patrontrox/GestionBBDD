@@ -54,9 +54,16 @@ namespace GestionBBDD
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     string dbPath = openFileDialog.FileName;
+                    string backupDir = Path.GetDirectoryName(dbPath);
+                    string backupFileName = Path.GetFileNameWithoutExtension(dbPath) + "_backup.accdb";
+                    string backupPath = Path.Combine(backupDir, backupFileName);
 
-                    // Crear una copia de seguridad de la base de datos
-                    string backupPath = Path.Combine(Path.GetDirectoryName(dbPath), Path.GetFileNameWithoutExtension(dbPath) + "_backup.accdb");
+                    // Verifica si el archivo de backup ya existe y lo elimina si es necesario
+                    if (File.Exists(backupPath))
+                    {
+                        File.Delete(backupPath);
+                    }
+                    // Intenta crear el backup
                     File.Copy(dbPath, backupPath, true);
 
                     OdbcConnection conn = new OdbcConnection(
@@ -261,7 +268,6 @@ namespace GestionBBDD
                 }
             }
         }
-
 
         private async void refreshButton_Click(object sender, EventArgs e)
         {
