@@ -18,271 +18,239 @@ namespace GestionBBDD
             InitializeComponent();
         }
 
-        // Constructor que recibe un array de nombres de campos y un booleano para indicar si el formulario es de solo lectura
         public DataForm(string connectionString, string tableName, bool isReadOnly = false)
         {
-            // Conexión a la base de datos Access
             using (OdbcConnection connection = new OdbcConnection(connectionString))
             {
                 connection.Open();
 
-                // Obtiene la información del esquema de la tabla
                 DataTable schemaTable = connection.GetSchema(OdbcMetaDataCollectionNames.Columns, new string[] { null, null, tableName, null });
+                DataTable relationships = GetRelationships(connection);
 
-                // Crea una lista para almacenar los nombres de los campos
                 List<string> fieldNames = new List<string>();
+                Dictionary<string, List<(string, string)>> foreignKeys = new Dictionary<string, List<(string, string)>>();
 
-                // Recorre las filas de la tabla de esquema
                 foreach (DataRow row in schemaTable.Rows)
                 {
-                    // Obtiene el nombre de la columna
                     string columnName = row["COLUMN_NAME"].ToString();
-
-                    // Añade el nombre de la columna a la lista de nombres de campos
                     fieldNames.Add(columnName);
+
+                    foreach (DataRow relRow in relationships.Rows)
+                    {
+                        if (relRow["FK_COLUMN_NAME"].ToString() == columnName && relRow["FK_TABLE_NAME"].ToString() == tableName)
+                        {
+                            if (!foreignKeys.ContainsKey(columnName))
+                            {
+                                foreignKeys[columnName] = new List<(string, string)>();
+                            }
+                            foreignKeys[columnName].Add((relRow["PK_TABLE_NAME"].ToString(), relRow["PK_COLUMN_NAME"].ToString()));
+                        }
+                    }
                 }
 
-                // Configura el formulario
                 Text = "Formulario de datos";
                 StartPosition = FormStartPosition.CenterScreen;
                 FormBorderStyle = FormBorderStyle.FixedDialog;
                 MaximizeBox = false;
 
-                // Crea un TableLayoutPanel para contener los TextBoxes y Labels
-                TableLayoutPanel panel = new TableLayoutPanel();
-                panel.ColumnCount = 2;
-                panel.RowCount = fieldNames.Count;
-                panel.Dock = DockStyle.Fill;
-                panel.AutoSize = true;
-                panel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+                TableLayoutPanel panel = new TableLayoutPanel
+                {
+                    ColumnCount = 2,
+                    RowCount = fieldNames.Count,
+                    Dock = DockStyle.Fill,
+                    AutoSize = true,
+                    AutoSizeMode = AutoSizeMode.GrowAndShrink
+                };
                 Controls.Add(panel);
 
-
-
-                // Crea los TextBoxes y Labels
                 for (int i = 0; i < fieldNames.Count; i++)
                 {
-
-                    Label label = new Label();
-                    label.Text = fieldNames[i];
-                    label.Font = new Font("Arial", 10, FontStyle.Bold); // Cambia la fuente
-                    label.ForeColor = Color.DarkBlue; // Cambia el color de la fuente
+                    Label label = new Label
+                    {
+                        Text = fieldNames[i],
+                        Font = new Font("Arial", 10, FontStyle.Bold),
+                        ForeColor = Color.DarkBlue
+                    };
                     panel.Controls.Add(label, 0, i);
 
-                    if (fieldNames[i] == "ID")
+                    if (foreignKeys.ContainsKey(fieldNames[i]))
                     {
-                        TextBox textBox = new TextBox();
-                        textBox.Size = new Size(150, textBox.Size.Height); // Cambia el ancho del TextBox a 200
-                        textBox.BorderStyle = BorderStyle.FixedSingle;
-                        textBox.Font = new Font("Arial", 10, FontStyle.Regular); // Cambia la fuente
-                        textBox.ReadOnly = false; // Hace que el campo ID sea de solo lectura siempre
-                        panel.Controls.Add(textBox, 1, i);
-                        fields[fieldNames[i]] = textBox;
-
-                    }
-
-                    else if (fieldNames[i] == "Type")
-                    {
-                        ComboBox comboBox = new ComboBox();
-                        comboBox.Items.AddRange(new object[] { "10/100/1000BaseTX", "Unknown" });
-                        comboBox.Font = new Font("Arial", 10, FontStyle.Bold); // Cambia la fuente
-                        comboBox.BackColor = Color.LightGray; // Cambia el color de fondo
-                        comboBox.DropDownStyle = ComboBoxStyle.DropDownList; // Cambia el estilo de la caja de combinación
+                        ComboBox comboBox = new ComboBox
+                        {
+                            Font = new Font("Arial", 10, FontStyle.Bold),
+                            BackColor = Color.LightGray,
+                            DropDownStyle = ComboBoxStyle.DropDownList
+                        };
                         panel.Controls.Add(comboBox, 1, i);
                         fields[fieldNames[i]] = comboBox;
 
-
-                    }
-                    else if (fieldNames[i] == "Speed")
-                    {
-                        ComboBox comboBox = new ComboBox();
-                        comboBox.Items.AddRange(new object[] { "a-100", "10", "a-10", "auto", "100" });
-                        comboBox.Font = new Font("Arial", 10, FontStyle.Bold); // Cambia la fuente
-                        comboBox.BackColor = Color.LightGray; // Cambia el color de fondo
-                        comboBox.DropDownStyle = ComboBoxStyle.DropDownList; // Cambia el estilo de la caja de combinación
-                        panel.Controls.Add(comboBox, 1, i);
-                        fields[fieldNames[i]] = comboBox;
-                    }
-                    else if (fieldNames[i] == "Duplex")
-                    {
-                        ComboBox comboBox = new ComboBox();
-                        comboBox.Items.AddRange(new object[] { "a-full", "full", "a-half", "auto" });
-                        comboBox.Font = new Font("Arial", 10, FontStyle.Bold); // Cambia la fuente
-                        comboBox.BackColor = Color.LightGray; // Cambia el color de fondo
-                        comboBox.DropDownStyle = ComboBoxStyle.DropDownList; // Cambia el estilo de la caja de combinación
-                        panel.Controls.Add(comboBox, 1, i);
-                        fields[fieldNames[i]] = comboBox;
-                    }
-                    else if (fieldNames[i] == "Tipo")
-                    {
-                        ComboBox comboBox = new ComboBox();
-                        comboBox.Items.AddRange(new object[] { "Trunk", "Access" });
-                        comboBox.Font = new Font("Arial", 10, FontStyle.Bold); // Cambia la fuente
-                        comboBox.BackColor = Color.LightGray; // Cambia el color de fondo
-                        comboBox.DropDownStyle = ComboBoxStyle.DropDownList; // Cambia el estilo de la caja de combinación
-                        panel.Controls.Add(comboBox, 1, i);
-                        fields[fieldNames[i]] = comboBox;
-                    }
-                    else if (fieldNames[i] == "Estado")
-                    {
-                        ComboBox comboBox = new ComboBox();
-                        comboBox.Items.AddRange(new object[] { "Connected", "Disabled", "Notconnect" });
-                        comboBox.Font = new Font("Arial", 10, FontStyle.Bold); // Cambia la fuente
-                        comboBox.BackColor = Color.LightGray; // Cambia el color de fondo
-                        comboBox.DropDownStyle = ComboBoxStyle.DropDownList; // Cambia el estilo de la caja de combinación
-                        panel.Controls.Add(comboBox, 1, i);
-                        fields[fieldNames[i]] = comboBox;
+                        foreach (var (relatedTable, relatedColumn) in foreignKeys[fieldNames[i]])
+                        {
+                            try
+                            {
+                                FillComboBoxWithRelatedData(connection, comboBox, relatedTable, relatedColumn);
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"Error filling ComboBox for {fieldNames[i]}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                        }
                     }
                     else
                     {
-                        TextBox textBox = new TextBox();
-                        textBox.Size = new Size(150, textBox.Size.Height); // Cambia el ancho del TextBox a 200
-                        textBox.BorderStyle = BorderStyle.FixedSingle;
-                        textBox.Font = new Font("Arial", 10, FontStyle.Regular); // Cambia la fuente
-                        textBox.MaxLength = 255; // Limita la longitud de entrada a 255 caracteres
-                        if (i == 0 && isReadOnly) // Si es la primera columna y el formulario es de solo lectura
+                        TextBox textBox = new TextBox
                         {
-                            textBox.ReadOnly = true; // Hace que el campo sea de solo lectura
-                        }
+                            Font = new Font("Arial", 10, FontStyle.Regular),
+                            ReadOnly = (i == 0 && isReadOnly)
+                        };
+                        textBox.Size = new Size(150, textBox.Size.Height); // Mover la asignación de Size después de la inicialización
+                        textBox.BorderStyle = BorderStyle.FixedSingle;
                         panel.Controls.Add(textBox, 1, i);
                         fields[fieldNames[i]] = textBox;
 
                     }
                 }
 
-                // Crea los botones OK y Cancelar
-                okButton = new Button();
-                okButton.Text = "OK";
-                okButton.Dock = DockStyle.Bottom;
+                okButton = new Button
+                {
+                    Text = "OK",
+                    Dock = DockStyle.Bottom,
+                    BackColor = Color.MediumSeaGreen,
+                    FlatStyle = FlatStyle.Flat,
+                    Font = new Font("Arial", 10, FontStyle.Bold)
+                };
+                okButton.FlatAppearance.BorderColor = Color.SeaGreen;
+                okButton.FlatAppearance.BorderSize = 1;
                 okButton.Click += (sender, e) => DialogResult = DialogResult.OK;
                 Controls.Add(okButton);
 
-                cancelButton = new Button();
-                cancelButton.Text = "Cancelar";
-                cancelButton.Dock = DockStyle.Bottom;
+                cancelButton = new Button
+                {
+                    Text = "Cancelar",
+                    Dock = DockStyle.Bottom,
+                    BackColor = Color.IndianRed,
+                    FlatStyle = FlatStyle.Flat,
+                    Font = new Font("Arial", 10, FontStyle.Bold)
+                };
+                cancelButton.FlatAppearance.BorderColor = Color.Firebrick;
+                cancelButton.FlatAppearance.BorderSize = 1;
                 cancelButton.Click += (sender, e) => DialogResult = DialogResult.Cancel;
                 Controls.Add(cancelButton);
 
-                // Configura los colores y estilos del formulario
                 BackColor = Color.LightGray;
 
-                // Configura los colores y estilos de los TextBoxes y Labels
                 foreach (Control control in panel.Controls)
                 {
-                    if (control is TextBox)
+                    if (control is TextBox textBoxControl)
                     {
-                        control.BackColor = Color.LightGray;
-                        control.ForeColor = Color.Black;
-                        control.Font = new Font("Arial", 10, FontStyle.Regular);
-
+                        textBoxControl.BackColor = Color.LightGray;
+                        textBoxControl.ForeColor = Color.Black;
                     }
-                    else if (control is Label)
+                    else if (control is Label labelControl)
                     {
-                        control.ForeColor = Color.DarkBlue;
+                        labelControl.ForeColor = Color.DarkBlue;
                     }
-                    else if (control is ComboBox)
+                    else if (control is ComboBox comboBoxControl)
                     {
-                        control.BackColor = Color.White;
-                        control.ForeColor = Color.Black;
+                        comboBoxControl.BackColor = Color.White;
+                        comboBoxControl.ForeColor = Color.Black;
                     }
                 }
 
-                // Configura los colores y estilos de los botones
-                okButton.BackColor = Color.MediumSeaGreen;
-                okButton.FlatStyle = FlatStyle.Flat;
-                okButton.FlatAppearance.BorderColor = Color.SeaGreen;
-                okButton.FlatAppearance.BorderSize = 1;
-                okButton.Font = new Font("Arial", 10, FontStyle.Bold);
-
-                cancelButton.BackColor = Color.IndianRed;
-                cancelButton.FlatStyle = FlatStyle.Flat;
-                cancelButton.FlatAppearance.BorderColor = Color.Firebrick;
-                cancelButton.FlatAppearance.BorderSize = 1;
-                cancelButton.Font = new Font("Arial", 10, FontStyle.Bold);
-
-                // Ajusta la altura del formulario en función del número de filas
-                int rowHeight = 35; // Altura estimada de una fila
-                int buttonHeight = 35; // Altura estimada de un botón
-                int padding = 25; // Espacio adicional para evitar que el formulario esté demasiado apretado
+                int rowHeight = 35;
+                int buttonHeight = 35;
+                int padding = 25;
                 Height = fieldNames.Count * rowHeight + buttonHeight + padding;
-
             }
         }
 
-        // Método para obtener el valor de un campo
+        private DataTable GetRelationships(OdbcConnection connection)
+        {
+            DataTable relationships = new DataTable();
+            relationships.Columns.Add("FK_TABLE_NAME");
+            relationships.Columns.Add("FK_COLUMN_NAME");
+            relationships.Columns.Add("PK_TABLE_NAME");
+            relationships.Columns.Add("PK_COLUMN_NAME");
+
+            string query = "SELECT szObject AS FK_TABLE_NAME, szColumn AS FK_COLUMN_NAME, szReferencedObject AS PK_TABLE_NAME, szReferencedColumn AS PK_COLUMN_NAME FROM Relaciones";
+
+            using (OdbcCommand command = new OdbcCommand(query, connection))
+            {
+                using (OdbcDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        DataRow row = relationships.NewRow();
+                        row["FK_TABLE_NAME"] = reader["FK_TABLE_NAME"];
+                        row["FK_COLUMN_NAME"] = reader["FK_COLUMN_NAME"];
+                        row["PK_TABLE_NAME"] = reader["PK_TABLE_NAME"];
+                        row["PK_COLUMN_NAME"] = reader["PK_COLUMN_NAME"];
+                        relationships.Rows.Add(row);
+                    }
+                }
+            }
+
+            return relationships;
+        }
+
+        private void FillComboBoxWithRelatedData(OdbcConnection connection, ComboBox comboBox, string relatedTable, string relatedColumn)
+        {
+            string query = $"SELECT {relatedColumn} FROM {relatedTable}";
+            using (OdbcCommand command = new OdbcCommand(query, connection))
+            {
+                using (OdbcDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        string value = reader[relatedColumn].ToString();
+                        System.Diagnostics.Debug.WriteLine($"Adding value '{value}' to ComboBox for column '{relatedColumn}' from table '{relatedTable}'");
+                        comboBox.Items.Add(value);
+                    }
+                }
+            }
+        }
+
+
         public object GetFieldValue(string name)
         {
-            if (fields[name] is TextBox)
-                return ((TextBox)fields[name]).Text;
-            else
-                return ((ComboBox)fields[name]).SelectedItem;
+            return fields[name] is TextBox textBox ? textBox.Text : ((ComboBox)fields[name]).SelectedItem;
         }
 
         public void IdentifyComboBoxFields(string connectionString, string tableName)
         {
-            // Conexión a la base de datos Access
             using (OdbcConnection connection = new OdbcConnection(connectionString))
             {
                 connection.Open();
 
-                // Obtiene la información del esquema de la tabla
                 DataTable schemaTable = connection.GetSchema(OdbcMetaDataCollectionNames.Columns, new string[] { null, null, tableName, null });
 
-                // Crea una lista para almacenar los nombres de los campos
                 List<string> fieldNames = new List<string>();
 
-                // Recorre las filas de la tabla de esquema
                 foreach (DataRow row in schemaTable.Rows)
                 {
-                    // Obtiene el nombre de la columna
                     string columnName = row["COLUMN_NAME"].ToString();
-
-                    // Obtiene el tipo de datos de la columna
                     string dataType = row["DATA_TYPE"].ToString();
 
-                    // Si el tipo de datos es un tipo que debe ser representado por un ComboBox, añade el nombre de la columna a la lista de nombres de campos
                     if (dataType == "3" || dataType == "202" || dataType == "203" || dataType == "7" || dataType == "5" || dataType == "11")
                     {
                         fieldNames.Add(columnName);
                     }
                 }
 
-                // Crea un nuevo formulario de datos con los nombres de los campos
                 DataForm dataForm = new DataForm(connectionString, tableName);
-
-                // Muestra el formulario de datos
                 dataForm.ShowDialog();
             }
         }
 
-        // Método para establecer el valor de un campo
         public void SetFieldValue(string name, object value)
         {
-            System.Diagnostics.Debug.WriteLine("Fields keys: " + String.Join(", ", fields.Keys));
-            System.Diagnostics.Debug.WriteLine("Name passed: " + name);
-
-            if (!fields.ContainsKey(name))
+            if (fields[name] is TextBox textBox)
             {
-                throw new ArgumentException($"The field '{name}' does not exist.");
+                textBox.Text = value.ToString();
             }
-
-            if (fields[name] is TextBox)
+            else if (fields[name] is ComboBox comboBox)
             {
-                ((TextBox)fields[name]).Text = value.ToString();
-            }
-            else if (fields[name] is ComboBox)
-            {
-                ComboBox comboBox = (ComboBox)fields[name];
-                if (comboBox.Items.Contains(value))
-                {
-                    comboBox.SelectedItem = value;
-                }
-                else
-                {
-                    // Añade los valores al combobox
-                    comboBox.Items.Add(value);
-                    comboBox.SelectedItem = value;
-                }
+                comboBox.SelectedItem = value;
             }
         }
     }

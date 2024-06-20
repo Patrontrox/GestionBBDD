@@ -58,12 +58,13 @@ namespace GestionBBDD
                     string backupFileName = Path.GetFileNameWithoutExtension(dbPath) + "_backup.accdb";
                     string backupPath = Path.Combine(backupDir, backupFileName);
 
-                    // Verifica si el archivo de backup ya existe y lo elimina si es necesario
-                    if (File.Exists(backupPath))
+                    // Asegura que el directorio de destino existe
+                    if (!Directory.Exists(backupDir))
                     {
-                        File.Delete(backupPath);
+                        Directory.CreateDirectory(backupDir);
                     }
-                    // Intenta crear el backup
+
+                    // Crea o sobrescribe el archivo de backup
                     File.Copy(dbPath, backupPath, true);
 
                     OdbcConnection conn = new OdbcConnection(
@@ -107,6 +108,8 @@ namespace GestionBBDD
                 return null;
             }
         }
+
+
 
         //Método para crear los controles de la interfaz
         private void CreateControls(Panel panel)

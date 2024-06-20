@@ -47,6 +47,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>OIP.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="CsvHelper, Version=32.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
       <HintPath>packages\CsvHelper.32.0.3\lib\net48\CsvHelper.dll</HintPath>
@@ -245,6 +248,7 @@
   <ItemGroup>
     <None Include="bin\Debug\OIP.jpg" />
     <None Include="bin\Debug\ptrjuanlu.jpg" />
+    <Content Include="OIP.ico" />
     <Content Include="OIP.jpg" />
   </ItemGroup>
   <ItemGroup>
